@@ -1,4 +1,4 @@
-import { LogOut, RefreshCw, ShieldCheck } from "lucide-react"
+import { LogOut, RefreshCw, ShieldCheck, X } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
@@ -51,6 +51,7 @@ function App({ currentUser, onLogout }) {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedStatus, setSelectedStatus] = useState("total")
   const [addMode, setAddMode] = useState("manual")
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
   const autoCheckingRef = useRef(false)
 
   const sortedDevices = useMemo(
@@ -281,6 +282,11 @@ function App({ currentUser, onLogout }) {
     setToast({ id: Date.now(), message, type })
   }
 
+  function confirmLogout() {
+    setLogoutConfirmOpen(false)
+    onLogout()
+  }
+
   function updatePingReport(nextDevices, mode) {
     const checkedAt = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
     const summary = summarizeDevices(nextDevices)
@@ -309,7 +315,7 @@ function App({ currentUser, onLogout }) {
             <RefreshCw size={16} className={checkingAll ? "spin" : ""} />
             {checkingAll ? "Checking..." : "Check All"}
           </button>
-          <button className="btn ghost" type="button" onClick={onLogout} title="Logout">
+          <button className="btn ghost" type="button" onClick={() => setLogoutConfirmOpen(true)} title="Logout">
             <LogOut size={16} />
             Logout
           </button>
@@ -317,6 +323,33 @@ function App({ currentUser, onLogout }) {
       </header>
 
       {toast ? <div className={`toast ${toast.type}`}>{toast.message}</div> : null}
+
+      {logoutConfirmOpen ? (
+        <div className="modal-backdrop" role="presentation" onMouseDown={() => setLogoutConfirmOpen(false)}>
+          <div className="modal-card confirm-modal" role="dialog" aria-modal="true" aria-labelledby="logout-confirm-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">Confirm Logout</p>
+                <h2 id="logout-confirm-title">Logout from this session?</h2>
+              </div>
+              <button className="modal-close" type="button" onClick={() => setLogoutConfirmOpen(false)} aria-label="Close logout confirmation">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="confirm-body">
+              <p>Are you sure you want to logout from Alert Monitoring System?</p>
+              <div className="form-actions">
+                <button className="btn ghost" type="button" onClick={() => setLogoutConfirmOpen(false)}>
+                  Cancel
+                </button>
+                <button className="btn danger" type="button" onClick={confirmLogout}>
+                  Yes, Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <main className="content">
         <Tabs

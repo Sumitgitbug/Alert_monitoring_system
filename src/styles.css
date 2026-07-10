@@ -481,6 +481,11 @@ button:disabled {
   color: #334155;
 }
 
+.btn.danger {
+  background: #dc2626;
+  color: #fff;
+}
+
 .panel {
   border: 1px solid #dbe3ef;
   border-radius: 22px;
@@ -1130,6 +1135,22 @@ button:disabled {
 
 .user-modal .device-form {
   padding: 1.25rem;
+}
+
+.confirm-modal {
+  width: min(430px, 100%);
+}
+
+.confirm-body {
+  padding: 1.25rem;
+}
+
+.confirm-body p {
+  margin: 0;
+  color: #475569;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.55;
 }
 
 .bulk-upload {

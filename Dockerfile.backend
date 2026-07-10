@@ -1,0 +1,21 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Install ping binary used by the monitoring worker.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends iputils-ping \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app.py .
+COPY backend ./backend
+
+ENV FLASK_HOST=0.0.0.0
+ENV FLASK_PORT=5050
+
+EXPOSE 5050
+
+CMD ["python", "app.py"]

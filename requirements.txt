@@ -1,0 +1,7 @@
+Flask
+flask-cors
+itsdangerous
+openpyxl
+PyMySQL
+python-dotenv
+Werkzeug

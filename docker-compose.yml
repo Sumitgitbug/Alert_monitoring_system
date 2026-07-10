@@ -1,0 +1,65 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: alert_mysql
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Asia/Kolkata}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-alert_monitoring}
+      MYSQL_USER: ${MYSQL_USER:-alert_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+    ports:
+      - "${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: alert_backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    cap_add:
+      - NET_RAW
+    environment:
+      TZ: ${TZ:-Asia/Kolkata}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Kolkata}
+      DB_TIME_ZONE: ${DB_TIME_ZONE:-+05:30}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-alert_monitoring}
+      DB_USER: ${MYSQL_USER:-alert_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:?FLASK_SECRET_KEY is required}
+      AUTH_TOKEN_MAX_AGE_SECONDS: ${AUTH_TOKEN_MAX_AGE_SECONDS:-43200}
+      FLASK_HOST: 0.0.0.0
+      FLASK_PORT: 5050
+      MAX_PING_WORKERS: ${MAX_PING_WORKERS:-120}
+      AUTO_CHECK_SECONDS: ${AUTO_CHECK_SECONDS:-60}
+      PING_HISTORY_RETENTION_DAYS: ${PING_HISTORY_RETENTION_DAYS:-7}
+      SNAPSHOT_RETENTION_DAYS: ${SNAPSHOT_RETENTION_DAYS:-90}
+    ports:
+      - "${BACKEND_PORT:-5050}:5050"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: alert_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+volumes:
+  mysql_data:
